@@ -389,10 +389,10 @@ function Landing() {
           <p className="mx-auto mt-4 max-w-2xl text-xl opacity-90">Hablemos sobre cómo VitalWatch puede acompañar a tu familia.</p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a href="mailto:hola@vitalwatch.app" className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-card px-8 text-lg font-semibold text-foreground shadow-[var(--shadow-medium)] transition hover:scale-[1.02]">
-              <Mail className="h-5 w-5" /> hola@vitalwatch.app
+              <Mail className="h-5 w-5" /> proyectovitalwatch@gmail.com
             </a>
             <Link to="/dashboard" className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl border-2 border-white/40 px-8 text-lg font-semibold transition hover:bg-white/10">
-              Ver demo en vivo <ArrowRight className="h-5 w-5" />
+              Ver VitalWatch <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
         </div>
