@@ -63,7 +63,7 @@ function Landing() {
           <div className="fade-up">
             <span className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-semibold text-primary shadow-[var(--shadow-soft)]">
               <span className="inline-block h-2 w-2 rounded-full bg-success pulse-ring" />
-              847 familias protegidas en tiempo real
+              50 familias protegidas en tiempo real
             </span>
             <h1 className="mt-6 text-5xl font-bold leading-tight text-foreground md:text-6xl lg:text-7xl">
               Hace 2 minutos detectamos una caída.
@@ -188,7 +188,7 @@ function Landing() {
             {[
               { icon: Target, title: "Compromiso", desc: "Cada alerta puede salvar una vida. Diseñamos con responsabilidad y rigor médico para que las familias confíen en cada notificación." },
               { icon: Lightbulb, title: "Innovación", desc: "Sensores de última generación, inteligencia artificial y conectividad constante para anticiparse a las emergencias antes de que escalen." },
-              { icon: HandHeart, title: "Confianza", desc: "Más de 847 familias ya confían en VitalWatch. Cada dato se encripta y cumple con los más altos estándares de privacidad de salud." },
+              { icon: HandHeart, title: "Confianza", desc: "Más de 50 familias ya confían en VitalWatch. Cada dato se encripta y cumple con los más altos estándares de privacidad de salud." },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="rounded-3xl bg-card p-8 shadow-[var(--shadow-soft)] ring-1 ring-border text-center transition hover:shadow-[var(--shadow-medium)]">
                 <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-secondary text-primary">
