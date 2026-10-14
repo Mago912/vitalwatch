@@ -157,21 +157,25 @@ if (res) {
                 <Clock className="h-4 w-4" /> En vivo
               </div>
             </div>
-            <div className="flex h-56 items-end gap-2">
-              {heartData.map((v, i) => {
-                const diff = heartMax - heartMin || 1;
-                const h = Math.max(15, Math.min(100, ((v - heartMin + 2) / (diff + 4)) * 100));
+<div className="flex h-56 items-end gap-2 border-b border-border pb-2">
+  {heartData.map((v, i) => {
+    // Escala segura para garantizar que la barra siempre tenga entre 20% y 100% de altura
+    const minVal = heartMin === heartMax ? heartMin - 10 : heartMin;
+    const maxVal = heartMin === heartMax ? heartMax + 10 : heartMax;
+    const heightPercent = Math.max(20, Math.min(100, ((v - minVal) / (maxVal - minVal)) * 100));
                 return (
-                  <div key={i} className="group flex flex-1 flex-col items-center gap-2">
-                    <span className="text-xs font-semibold text-muted-foreground opacity-0 transition group-hover:opacity-100">{v}</span>
-                    <div
-                      className="w-full rounded-t-xl bg-primary transition hover:opacity-80"
-                      style={{ height: `${h}%` }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+<div key={i} className="group flex flex-1 flex-col items-center h-full justify-end gap-1">
+        <span className="text-xs font-semibold text-muted-foreground transition group-hover:scale-110">
+          {v}
+        </span>
+<div
+          className="w-full rounded-t-xl bg-primary transition-all duration-300 hover:opacity-80"
+          style={{ height: `${heightPercent}%`, minHeight: "24px" }}
+        />
+      </div>
+    );
+  })}
+</div>
             <div className="mt-4 flex justify-between text-xs text-muted-foreground">
               <span>Reciente</span><span>Anterior</span>
             </div>
@@ -228,21 +232,24 @@ if (res) {
               <Clock className="h-4 w-4" /> En vivo
             </div>
           </div>
-          <div className="flex h-40 items-end gap-2">
-            {spo2Data.map((v, i) => {
-              const diff = spo2Max - spo2Min || 1;
-              const h = Math.max(15, Math.min(100, ((v - spo2Min + 1) / (diff + 2)) * 100));
+          <div className="flex h-40 items-end gap-2 border-b border-border pb-2">
+  {spo2Data.map((v, i) => {
+    const minVal = spo2Min === spo2Max ? spo2Min - 5 : spo2Min;
+    const maxVal = spo2Min === spo2Max ? spo2Max + 5 : spo2Max;
+    const heightPercent = Math.max(20, Math.min(100, ((v - minVal) / (maxVal - minVal)) * 100));
               return (
-                <div key={i} className="group flex flex-1 flex-col items-center gap-2">
-                  <span className="text-xs font-semibold text-muted-foreground opacity-0 transition group-hover:opacity-100">{v}%</span>
-                  <div
-                    className="w-full rounded-t-xl bg-success transition hover:opacity-80"
-                    style={{ height: `${h}%` }}
-                  />
-                </div>
-              );
-            })}
-          </div>
+<div key={i} className="group flex flex-1 flex-col items-center h-full justify-end gap-1">
+        <span className="text-xs font-semibold text-muted-foreground transition group-hover:scale-110">
+          {v}%
+        </span>
+        <div
+          className="w-full rounded-t-xl bg-success transition-all duration-300 hover:opacity-80"
+          style={{ height: `${heightPercent}%`, minHeight: "20px" }}
+        />
+      </div>
+    );
+  })}
+</div>
         </div>
 
         {/* Medicación y Contactos */}
