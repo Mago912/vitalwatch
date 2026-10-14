@@ -8,7 +8,7 @@ import {
 // Ajusta esta ruta según la ubicación exacta de tu archivo api.js / api.ts
 import { obtenerDatosPaciente } from "../services/api";
 
-export const Route = createFileRoute("/dashboard" as any)({
+export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — VitalWatch" },
