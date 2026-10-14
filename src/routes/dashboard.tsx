@@ -61,17 +61,17 @@ if (res) {
 
   // Construir arreglos para los gráficos dinámicos (últimas lecturas)
   const heartData = lecturas.length > 0 
-    ? lecturas.slice(0, 12).map((l) => l.bpm).reverse()
+    ? lecturas.map((l: any) => Number(l.bpm || l.BPM || 76)).reverse()
     : [72, 75, 74, 78, 76, 79, 77, 76, 78, 75, 76, 74];
 
   const spo2Data = lecturas.length > 0 
-    ? lecturas.slice(0, 12).map((l) => l.spo2).reverse()
+    ? lecturas.map((l: any) => Number(l.spo2 || l.SPO2 || 98)).reverse()
     : [97, 98, 97, 98, 99, 98, 97, 98, 98, 97, 98, 98];
 
-  const heartMax = Math.max(...heartData);
-  const heartMin = Math.min(...heartData);
-  const spo2Max = Math.max(...spo2Data);
-  const spo2Min = Math.min(...spo2Data);
+ const heartMax = heartData.length > 0 ? Math.max(...heartData) : 100;
+  const heartMin = heartData.length > 0 ? Math.min(...heartData) : 50;
+  const spo2Max = spo2Data.length > 0 ? Math.max(...spo2Data) : 100;
+  const spo2Min = spo2Data.length > 0 ? Math.min(...spo2Data) : 90;
 
   return (
     <div className="min-h-screen bg-muted/30">

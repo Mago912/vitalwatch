@@ -12,7 +12,13 @@ export async function obtenerDatosPaciente(id = 1) {
     const lecturas = await resLecturas.json();
     const alertas = await resAlertas.json();
 
-    return { paciente, lecturas, alertas };
+    console.log("Datos crudos del backend:", { paciente, lecturas, alertas });
+
+    return { 
+      paciente: paciente || {}, 
+      lecturas: Array.isArray(lecturas) ? lecturas : [], 
+      alertas: Array.isArray(alertas) ? alertas : [] 
+    };
   } catch (error) {
     console.error("Error al conectar con el backend:", error);
     return null;
