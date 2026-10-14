@@ -93,17 +93,17 @@ if (res) {
         {/* Encabezado del paciente */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-medium uppercase tracking-wider text-primary">Paciente</p>
+            <p className="text-sm font-medium uppercase tracking-wider text-primary">Paciente (Conectado a Render)</p>
             <h1 className="mt-1 truncate text-3xl font-bold sm:text-4xl">
               {paciente?.nombre ? `${paciente.nombre} ${paciente.apellido || ""}` : "Don Roberto Méndez"}
             </h1>
             <p className="mt-1 text-base text-muted-foreground">
-              {paciente?.edad ? `${paciente.edad} años` : "78 años"} · {loading ? "Cargando..." : "Última lectura en tiempo real"}
+              {loading ? "Cargando datos..." : `Lecturas cargadas: ${lecturas.length} registros desde el backend`}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-3 rounded-2xl bg-success/10 px-5 py-3 text-success">
             <CheckCircle2 className="h-6 w-6" />
-            <span className="text-lg font-bold">Estado normal</span>
+            <span className="text-lg font-bold">{lecturas.length > 0 ? "¡Conectado!" : "Sin datos"}</span>
           </div>
         </div>
 
