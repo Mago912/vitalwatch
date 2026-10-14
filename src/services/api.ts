@@ -9,15 +9,17 @@ export async function obtenerDatosPaciente(id = 1) {
     ]);
 
     const paciente = await resPaciente.json();
-    const lecturas = await resLecturas.json();
-    const alertas = await resAlertas.json();
+    const rawLecturas = await resLecturas.json();
+    const rawAlertas = await resAlertas.json();
 
-    console.log("Datos crudos del backend:", { paciente, lecturas, alertas });
+    // Normalizar asegurando minúsculas por si el backend responde con mayúsculas
+    const lecturas = Array.isArray(rawLecturas) ? rawLecturas : (rawLecturas.Lecturas || rawLecturas.lecturas || []);
+    const alertas = Array.isArray(rawAlertas) ? rawAlertas : (rawAlertas.Alertas || rawAlertas.alertas || []);
 
     return { 
-      paciente: paciente || {}, 
-      lecturas: Array.isArray(lecturas) ? lecturas : [], 
-      alertas: Array.isArray(alertas) ? alertas : [] 
+      paciente: paciente.paciente || paciente.Paciente || paciente || {}, 
+      lecturas, 
+      alertas 
     };
   } catch (error) {
     console.error("Error al conectar con el backend:", error);

@@ -33,21 +33,21 @@ function Dashboard() {
   // Declarada aquí para que sea accesible en todo el componente y en el botón onClick
 async function cargarDatos() {
     console.log("-> Intentando conectar con el backend...");
-    const res = await obtenerDatosPaciente(1);
+   const res = await obtenerDatosPaciente(1);
     console.log("-> Respuesta recibida del backend:", res);
     
 if (res) {
       // paciente / Paciente
       const datosPaciente = res.paciente || res.paciente;
-      if (datosPaciente) setPaciente(datosPaciente);
+      if (res.paciente) setPaciente(res.paciente);
 
       // lecturas / Lecturas
       const datosLecturas = res.lecturas || res.lecturas;
-      if (Array.isArray(datosLecturas)) setLecturas(datosLecturas);
+      if (Array.isArray(res.lecturas)) setLecturas(res.lecturas);
 
       // alertas / Alertas
       const datosAlertas = res.alertas || res.alertas;
-      if (Array.isArray(datosAlertas)) setAlertas(datosAlertas);
+      if (Array.isArray(res.alertas)) setAlertas(res.alertas);
     }
     setLoading(false);
   }
