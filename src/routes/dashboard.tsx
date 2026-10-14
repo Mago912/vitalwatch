@@ -5,7 +5,6 @@ import {
   HeartPulse, TrendingUp, Bell, Calendar, Phone, User, MapPin, RefreshCw,
 } from "lucide-react";
 
-// Ajusta esta ruta según la ubicación exacta de tu archivo api.js / api.ts
 import { obtenerDatosPaciente } from "../services/api";
 
 export const Route = createFileRoute("/dashboard")({
@@ -31,17 +30,19 @@ function Dashboard() {
   const [alertas, setAlertas] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Cargar datos desde el backend en Render
-  const cargarDatos = async () => {
-    setLoading(true);
-    const res = await obtenerDatosPaciente(1); // Paciente ID = 1 por defecto
+  // Declarada aquí para que sea accesible en todo el componente y en el botón onClick
+  async function cargarDatos() {
+    console.log("-> Intentando conectar con el backend...");
+    const res = await obtenerDatosPaciente(1);
+    console.log("-> Respuesta recibida del backend:", res);
+    
     if (res) {
       if (res.paciente) setPaciente(res.paciente);
       if (Array.isArray(res.lecturas)) setLecturas(res.lecturas);
       if (Array.isArray(res.alertas)) setAlertas(res.alertas);
     }
     setLoading(false);
-  };
+  }
 
   useEffect(() => {
     cargarDatos();
@@ -74,7 +75,7 @@ function Dashboard() {
         </div>
         <button 
           onClick={cargarDatos}
-          className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+          className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline cursor-pointer"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Recargar datos
         </button>
