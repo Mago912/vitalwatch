@@ -1,11 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import {
-  Heart, Activity, AlertTriangle, CheckCircle2, Pill, Clock, ArrowLeft,
-  HeartPulse, TrendingUp, Bell, Calendar, Phone, User, MapPin,
+  Heart, Activity, AlertTriangle, CheckCircle2, Pill, Clock,
+  HeartPulse, TrendingUp, Bell, Calendar, Phone, User, MapPin, RefreshCw,
 } from "lucide-react";
-import { SiteNav, SiteFooter } from "@/components/SiteNav";
 
-export const Route = createFileRoute("/dashboard")({
+// Ajusta esta ruta según la ubicación exacta de tu archivo api.js / api.ts
+import { obtenerDatosPaciente } from "../services/api";
+
+export const Route = createFileRoute("/dashboard" as any)({
   head: () => ({
     meta: [
       { title: "Dashboard — VitalWatch" },
@@ -22,10 +25,40 @@ const alertColorMap: Record<string, string> = {
   destructive: "bg-destructive/15 text-destructive",
 };
 
-const heartData = [72, 75, 74, 78, 76, 79, 77, 76, 78, 75, 76, 74];
-const spo2Data = [97, 98, 97, 98, 99, 98, 97, 98, 98, 97, 98, 98];
-
 function Dashboard() {
+  const [paciente, setPaciente] = useState<any>(null);
+  const [lecturas, setLecturas] = useState<any[]>([]);
+  const [alertas, setAlertas] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Cargar datos desde el backend en Render
+  const cargarDatos = async () => {
+    setLoading(true);
+    const res = await obtenerDatosPaciente(1); // Paciente ID = 1 por defecto
+    if (res) {
+      if (res.paciente) setPaciente(res.paciente);
+      if (Array.isArray(res.lecturas)) setLecturas(res.lecturas);
+      if (Array.isArray(res.alertas)) setAlertas(res.alertas);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  // Extraer última lectura o asignar por defecto si la lista está vacía
+  const ultimaLectura = lecturas.length > 0 ? lecturas[0] : { bpm: 76, spo2: 98 };
+
+  // Construir arreglos para los gráficos dinámicos (últimas lecturas)
+  const heartData = lecturas.length > 0 
+    ? lecturas.slice(0, 12).map((l) => l.bpm).reverse()
+    : [72, 75, 74, 78, 76, 79, 77, 76, 78, 75, 76, 74];
+
+  const spo2Data = lecturas.length > 0 
+    ? lecturas.slice(0, 12).map((l) => l.spo2).reverse()
+    : [97, 98, 97, 98, 99, 98, 97, 98, 98, 97, 98, 98];
+
   const heartMax = Math.max(...heartData);
   const heartMin = Math.min(...heartData);
   const spo2Max = Math.max(...spo2Data);
@@ -33,15 +66,31 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <SiteNav />
+      {/* Navegación Principal */}
+      <header className="border-b bg-card px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <HeartPulse className="h-6 w-6 text-primary" />
+          <span className="text-xl font-bold">VitalWatch</span>
+        </div>
+        <button 
+          onClick={cargarDatos}
+          className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Recargar datos
+        </button>
+      </header>
 
       <main className="mx-auto max-w-7xl px-6 py-10">
-        {/* Patient header */}
+        {/* Encabezado del paciente */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-medium uppercase tracking-wider text-primary">Paciente</p>
-            <h1 className="mt-1 truncate text-3xl font-bold sm:text-4xl">Don Roberto Méndez</h1>
-            <p className="mt-1 text-base text-muted-foreground">78 años · Última lectura hace 12 segundos</p>
+            <h1 className="mt-1 truncate text-3xl font-bold sm:text-4xl">
+              {paciente?.nombre ? `${paciente.nombre} ${paciente.apellido || ""}` : "Don Roberto Méndez"}
+            </h1>
+            <p className="mt-1 text-base text-muted-foreground">
+              {paciente?.edad ? `${paciente.edad} años` : "78 años"} · {loading ? "Cargando..." : "Última lectura en tiempo real"}
+            </p>
           </div>
           <div className="flex shrink-0 items-center gap-3 rounded-2xl bg-success/10 px-5 py-3 text-success">
             <CheckCircle2 className="h-6 w-6" />
@@ -49,12 +98,12 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Vital stats */}
+        {/* Tarjetas de Signos Vitales */}
         <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           <VitalCard
             icon={HeartPulse}
             label="Frecuencia cardíaca"
-            value="76"
+            value={String(ultimaLectura.bpm ?? 76)}
             unit="bpm"
             color="destructive"
             range="60 – 100 bpm"
@@ -63,7 +112,7 @@ function Dashboard() {
           <VitalCard
             icon={Activity}
             label="Oxígeno (SpO₂)"
-            value="98"
+            value={String(ultimaLectura.spo2 ?? 98)}
             unit="%"
             color="primary"
             range="Normal: ≥ 95%"
@@ -86,27 +135,28 @@ function Dashboard() {
           />
         </div>
 
-        {/* Chart + Alerts */}
+        {/* Gráfico de Corazón y Lista de Alertas */}
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          {/* Heart chart */}
-          <div className="rounded-3xl bg-card p-7 shadow-[var(--shadow-soft)] ring-1 ring-border lg:col-span-2">
+          {/* Gráfico Corazón */}
+          <div className="rounded-3xl bg-card p-7 shadow-sm ring-1 ring-border lg:col-span-2">
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold">Historial del corazón</h2>
-                <p className="text-base text-muted-foreground">Últimas 12 horas</p>
+                <p className="text-base text-muted-foreground">Últimas lecturas obtenidas</p>
               </div>
               <div className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-1.5 text-sm font-semibold text-primary">
-                <Clock className="h-4 w-4" /> Hoy
+                <Clock className="h-4 w-4" /> En vivo
               </div>
             </div>
             <div className="flex h-56 items-end gap-2">
               {heartData.map((v, i) => {
-                const h = ((v - heartMin + 4) / (heartMax - heartMin + 8)) * 100;
+                const diff = heartMax - heartMin || 1;
+                const h = Math.max(15, Math.min(100, ((v - heartMin + 2) / (diff + 4)) * 100));
                 return (
                   <div key={i} className="group flex flex-1 flex-col items-center gap-2">
                     <span className="text-xs font-semibold text-muted-foreground opacity-0 transition group-hover:opacity-100">{v}</span>
                     <div
-                      className="w-full rounded-t-xl bg-[image:var(--gradient-primary)] transition hover:opacity-80"
+                      className="w-full rounded-t-xl bg-primary transition hover:opacity-80"
                       style={{ height: `${h}%` }}
                     />
                   </div>
@@ -114,51 +164,65 @@ function Dashboard() {
               })}
             </div>
             <div className="mt-4 flex justify-between text-xs text-muted-foreground">
-              <span>8 AM</span><span>12 PM</span><span>4 PM</span><span>8 PM</span>
+              <span>Reciente</span><span>Anterior</span>
             </div>
           </div>
 
-          {/* Alerts */}
-          <div className="rounded-3xl bg-card p-7 shadow-[var(--shadow-soft)] ring-1 ring-border">
+          {/* Alertas dinámicas */}
+          <div className="rounded-3xl bg-card p-7 shadow-sm ring-1 ring-border">
             <div className="mb-5 flex items-center gap-3">
               <Bell className="h-6 w-6 text-primary" />
               <h2 className="text-2xl font-bold">Alertas</h2>
             </div>
             <ul className="space-y-3">
-              {[
-                { icon: CheckCircle2, color: "success", title: "Signos normales", time: "Hace 5 min" },
-                { icon: AlertTriangle, color: "warning", title: "Pulso ligeramente alto", time: "Hace 2 h" },
-                { icon: CheckCircle2, color: "success", title: "Medicación tomada", time: "Hace 4 h" },
-                { icon: Activity, color: "primary", title: "Caminata detectada", time: "Ayer" },
-              ].map((a, i) => (
-                <li key={i} className="flex items-center gap-3 rounded-2xl bg-muted/50 p-4">
-                  <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${alertColorMap[a.color]}`}>
-                    <a.icon className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{a.title}</p>
-                    <p className="text-sm text-muted-foreground">{a.time}</p>
-                  </div>
-                </li>
-              ))}
+              {alertas.length > 0 ? (
+                alertas.slice(0, 4).map((a, i) => (
+                  <li key={i} className="flex items-center gap-3 rounded-2xl bg-muted/50 p-4">
+                    <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${alertColorMap[a.tipo] || alertColorMap.primary}`}>
+                      <AlertTriangle className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{a.descripcion || a.tipo || "Alerta registrada"}</p>
+                      <p className="text-sm text-muted-foreground">Paciente ID: {a.paciente_id}</p>
+                    </div>
+                  </li>
+                ))
+              ) : (
+                [
+                  { icon: CheckCircle2, color: "success", title: "Signos normales", time: "Hace 5 min" },
+                  { icon: AlertTriangle, color: "warning", title: "Pulso ligeramente alto", time: "Hace 2 h" },
+                  { icon: CheckCircle2, color: "success", title: "Medicación tomada", time: "Hace 4 h" },
+                ].map((a, i) => (
+                  <li key={i} className="flex items-center gap-3 rounded-2xl bg-muted/50 p-4">
+                    <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${alertColorMap[a.color]}`}>
+                      <a.icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{a.title}</p>
+                      <p className="text-sm text-muted-foreground">{a.time}</p>
+                    </div>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
         </div>
 
-        {/* SpO2 Chart */}
-        <div className="mt-8 rounded-3xl bg-card p-7 shadow-[var(--shadow-soft)] ring-1 ring-border">
+        {/* Gráfico de SpO2 */}
+        <div className="mt-8 rounded-3xl bg-card p-7 shadow-sm ring-1 ring-border">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">Historial de oxígeno (SpO₂)</h2>
-              <p className="text-base text-muted-foreground">Últimas 12 horas</p>
+              <p className="text-base text-muted-foreground">Porcentaje de saturación</p>
             </div>
             <div className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-1.5 text-sm font-semibold text-primary">
-              <Clock className="h-4 w-4" /> Hoy
+              <Clock className="h-4 w-4" /> En vivo
             </div>
           </div>
           <div className="flex h-40 items-end gap-2">
             {spo2Data.map((v, i) => {
-              const h = ((v - spo2Min + 1) / (spo2Max - spo2Min + 2)) * 100;
+              const diff = spo2Max - spo2Min || 1;
+              const h = Math.max(15, Math.min(100, ((v - spo2Min + 1) / (diff + 2)) * 100));
               return (
                 <div key={i} className="group flex flex-1 flex-col items-center gap-2">
                   <span className="text-xs font-semibold text-muted-foreground opacity-0 transition group-hover:opacity-100">{v}%</span>
@@ -170,15 +234,11 @@ function Dashboard() {
               );
             })}
           </div>
-          <div className="mt-4 flex justify-between text-xs text-muted-foreground">
-            <span>8 AM</span><span>12 PM</span><span>4 PM</span><span>8 PM</span>
-          </div>
         </div>
 
-        {/* Medication + Contacts */}
+        {/* Medicación y Contactos */}
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          {/* Medication */}
-          <div className="rounded-3xl bg-card p-7 shadow-[var(--shadow-soft)] ring-1 ring-border lg:col-span-2">
+          <div className="rounded-3xl bg-card p-7 shadow-sm ring-1 ring-border lg:col-span-2">
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Pill className="h-6 w-6 text-primary" />
@@ -198,11 +258,7 @@ function Dashboard() {
                       <p className="text-xl font-bold">{m.name}</p>
                       <p className="text-base text-muted-foreground">{m.dose}</p>
                     </div>
-                    {m.taken ? (
-                      <CheckCircle2 className="h-7 w-7 text-success" />
-                    ) : (
-                      <Clock className="h-7 w-7 text-muted-foreground" />
-                    )}
+                    {m.taken ? <CheckCircle2 className="h-7 w-7 text-success" /> : <Clock className="h-7 w-7 text-muted-foreground" />}
                   </div>
                   <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                     <span className="text-sm font-semibold text-muted-foreground">{m.time}</span>
@@ -215,17 +271,16 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Emergency Contacts */}
-          <div className="rounded-3xl bg-card p-7 shadow-[var(--shadow-soft)] ring-1 ring-border">
+          <div className="rounded-3xl bg-card p-7 shadow-sm ring-1 ring-border">
             <div className="mb-5 flex items-center gap-3">
               <Phone className="h-6 w-6 text-primary" />
               <h2 className="text-2xl font-bold">Contactos</h2>
             </div>
             <ul className="space-y-3">
               {[
-                { name: "María Méndez", role: "Hija", phone: "+54 11 5555-0101" },
-                { name: "Carlos Méndez", role: "Hijo", phone: "+54 11 5555-0202" },
-                { name: "Dr. Fernández", role: "Médico", phone: "+54 11 5555-0303" },
+                { name: "María Méndez", role: "Hija" },
+                { name: "Carlos Méndez", role: "Hijo" },
+                { name: "Dr. Fernández", role: "Médico" },
               ].map((c) => (
                 <li key={c.name} className="flex items-center gap-3 rounded-2xl bg-muted/50 p-4">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
@@ -240,35 +295,11 @@ function Dashboard() {
             </ul>
           </div>
         </div>
-
-        {/* Activity Timeline */}
-        <div className="mt-8 rounded-3xl bg-card p-7 shadow-[var(--shadow-soft)] ring-1 ring-border">
-          <div className="mb-6 flex items-center gap-3">
-            <Activity className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold">Actividad reciente</h2>
-          </div>
-          <div className="relative ml-4 border-l-2 border-border pl-8 space-y-8">
-            {[
-              { icon: HeartPulse, color: "text-success", title: "Signos vitales estables", desc: "Pulso 76 bpm · SpO₂ 98%", time: "Hace 12 min" },
-              { icon: Activity, color: "text-primary", title: "Caminata detectada", desc: "350 metros en el parque", time: "Hace 2 horas" },
-              { icon: CheckCircle2, color: "text-success", title: "Medicación tomada", desc: "Aspirina 100 mg", time: "Hace 4 horas" },
-              { icon: AlertTriangle, color: "text-warning", title: "Pulso ligeramente elevado", desc: "92 bpm durante 5 minutos", time: "Hace 6 horas" },
-              { icon: MapPin, color: "text-primary", title: "Salida del hogar", desc: "Movimiento fuera del radio habitual", time: "Ayer, 10:30 AM" },
-            ].map((ev, i) => (
-              <div key={i} className="relative">
-                <div className={`absolute -left-[41px] top-1 grid h-6 w-6 place-items-center rounded-full bg-card ring-2 ring-border ${ev.color}`}>
-                  <ev.icon className="h-3 w-3" />
-                </div>
-                <p className="font-semibold">{ev.title}</p>
-                <p className="text-sm text-muted-foreground">{ev.desc}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{ev.time}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </main>
 
-      <SiteFooter />
+      <footer className="border-t bg-card py-6 text-center text-sm text-muted-foreground">
+        © VitalWatch — Monitoreo de Signos Vitales
+      </footer>
     </div>
   );
 }
@@ -285,11 +316,11 @@ function VitalCard({
     success: "bg-success/10 text-success",
   };
   return (
-    <div className="rounded-3xl bg-card p-6 shadow-[var(--shadow-soft)] ring-1 ring-border transition hover:shadow-[var(--shadow-medium)]">
+    <div className="rounded-3xl bg-card p-6 shadow-sm ring-1 ring-border transition hover:shadow-md">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
         <div className={`grid h-11 w-11 place-items-center rounded-xl ${colorMap[color]}`}>
-          <Icon className={`h-5 w-5 ${animated ? "heartbeat" : ""}`} />
+          <Icon className={`h-5 w-5 ${animated ? "animate-pulse" : ""}`} />
         </div>
       </div>
       <div className="mt-4 flex items-baseline gap-2">
